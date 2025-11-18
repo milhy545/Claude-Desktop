@@ -59,7 +59,7 @@ pub fn save_config(config: &str) -> Result<(), String> {
 }
 
 /// Vrátí cestu k config souboru
-fn get_config_path() -> PathBuf {
+pub(crate) fn get_config_path() -> PathBuf {
     config_dir()
         .expect("Nelze najít config directory")
         .join("Claude")

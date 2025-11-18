@@ -24,8 +24,12 @@ serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 dirs = "5.0"
 
-# Pro config parsing
+# Config parsing
 toml = "0.8"
+
+# Logging and debugging
+log = "0.4"
+env_logger = "0.11"
 
 [features]
 # Povolit všechny Tauri API features

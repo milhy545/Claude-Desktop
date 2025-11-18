@@ -9,6 +9,7 @@ use std::sync::Mutex;
 // Moduly
 mod auth;
 mod mcp;
+mod debug;
 
 // Globální stav aplikace
 struct AppState {
@@ -88,6 +89,10 @@ fn open_config_dir() -> Result<(), String> {
 }
 
 fn main() {
+    // Inicializace loggingu
+    debug::init_logging();
+    debug::log_system_info();
+
     // Inicializace aplikace
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())

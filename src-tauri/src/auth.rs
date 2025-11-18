@@ -64,3 +64,26 @@ pub fn logout() -> Result<(), String> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_session_path() {
+        let path = get_session_path();
+        assert!(path.to_string_lossy().contains(".claude"));
+    }
+
+    #[test]
+    fn test_is_authenticated_returns_result() {
+        let result = is_authenticated();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_logout_no_panic() {
+        // Should not panic even if session doesn't exist
+        let _ = logout();
+    }
+}
