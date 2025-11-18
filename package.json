@@ -1,0 +1,23 @@
+{
+  "name": "claude-desktop-tauri",
+  "version": "0.1.0",
+  "description": "Claude Desktop for Linux - Lightweight Tauri implementation",
+  "author": "milhy545",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/milhy545/Claude-Desktop"
+  },
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "build:deb": "tauri build --bundles deb",
+    "build:appimage": "tauri build --bundles appimage",
+    "build:rpm": "tauri build --bundles rpm"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Desktop</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <h1>🦀 Claude Desktop</h1>
+                <span class="badge">Tauri Edition</span>
+            </div>
+            <div class="header-actions">
+                <button id="settingsBtn" class="btn btn-icon" title="Nastavení">⚙️</button>
+                <button id="authBtn" class="btn btn-primary">Přihlásit se</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Sidebar - MCP Servers -->
+            <aside class="sidebar">
+                <h2>MCP Servery</h2>
+                <div id="mcpServerList" class="server-list">
+                    <p class="loading">Načítám...</p>
+                </div>
+                <button id="addServerBtn" class="btn btn-secondary">+ Přidat Server</button>
+            </aside>
+
+            <!-- Claude WebView Container -->
+            <div class="webview-container">
+                <div id="claudeWebview">
+                    <!-- Embedded claude.ai -->
+                    <iframe
+                        src="https://claude.ai"
+                        title="Claude AI"
+                        frameborder="0"
+                        allow="clipboard-read; clipboard-write"
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                    ></iframe>
+                </div>
+            </div>
+        </main>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Nastavení</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-section">
+                        <h3>MCP Konfigurace</h3>
+                        <textarea
+                            id="mcpConfig"
+                            rows="20"
+                            placeholder="Načítám konfiguraci..."
+                        ></textarea>
+                        <div class="button-group">
+                            <button id="saveConfigBtn" class="btn btn-primary">Uložit</button>
+                            <button id="openConfigDirBtn" class="btn btn-secondary">Otevřít složku</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Informace</h3>
+                        <p><strong>Verze:</strong> <span id="appVersion">0.1.0</span></p>
+                        <p><strong>Systém:</strong> <span id="systemInfo">Linux</span></p>
+                        <p><strong>RAM:</strong> ~30-50 MB 🚀</p>
+                        <p><strong>vs Electron:</strong> ~200-400 MB 🐌</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
