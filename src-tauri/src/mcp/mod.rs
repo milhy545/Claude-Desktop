@@ -21,6 +21,8 @@ pub struct McpServer {
 
 /// Načte MCP konfiguraci z ~/.config/Claude/claude_desktop_config.json
 pub fn load_config() -> Result<String, String> {
+    let _timer = crate::debug::PerfTimer::with_threshold("load_mcp_config", 100);
+
     let config_path = get_config_path();
 
     if !config_path.exists() {
@@ -46,6 +48,8 @@ pub fn load_config() -> Result<String, String> {
 
 /// Uloží MCP konfiguraci
 pub fn save_config(config: &str) -> Result<(), String> {
+    let _timer = crate::debug::PerfTimer::with_threshold("save_mcp_config", 100);
+
     let config_path = get_config_path();
 
     // Vytvoř parent directory, pokud neexistuje

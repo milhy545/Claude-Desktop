@@ -1,6 +1,7 @@
 // Debug utilities and logging
 
 use std::sync::Once;
+use std::time::Instant;
 
 static INIT: Once = Once::new();
 
@@ -36,18 +37,31 @@ pub fn log_system_info() {
     log::info!("🚀 Build: Release");
 }
 
-/// Performance timer for debugging
+/// Performance timer for debugging and production monitoring
 pub struct PerfTimer {
     name: String,
-    start: std::time::Instant,
+    start: Instant,
+    threshold_ms: Option<u64>,
 }
 
 impl PerfTimer {
+    /// Create a new performance timer
     pub fn new(name: &str) -> Self {
         log::debug!("⏱️  Starting: {}", name);
         Self {
             name: name.to_string(),
-            start: std::time::Instant::now(),
+            start: Instant::now(),
+            threshold_ms: None,
+        }
+    }
+
+    /// Create a timer that logs warning if exceeds threshold (production monitoring)
+    pub fn with_threshold(name: &str, threshold_ms: u64) -> Self {
+        log::debug!("⏱️  Starting: {} (threshold: {}ms)", name, threshold_ms);
+        Self {
+            name: name.to_string(),
+            start: Instant::now(),
+            threshold_ms: Some(threshold_ms),
         }
     }
 }
@@ -55,7 +69,22 @@ impl PerfTimer {
 impl Drop for PerfTimer {
     fn drop(&mut self) {
         let elapsed = self.start.elapsed();
-        log::debug!("✅ Finished: {} ({:.2?})", self.name, elapsed);
+        let elapsed_ms = elapsed.as_millis() as u64;
+
+        if let Some(threshold) = self.threshold_ms {
+            if elapsed_ms > threshold {
+                log::warn!(
+                    "⚠️  Slow operation: {} took {:.2?} (threshold: {}ms)",
+                    self.name,
+                    elapsed,
+                    threshold
+                );
+            } else {
+                log::debug!("✅ Finished: {} ({:.2?})", self.name, elapsed);
+            }
+        } else {
+            log::debug!("✅ Finished: {} ({:.2?})", self.name, elapsed);
+        }
     }
 }
 
