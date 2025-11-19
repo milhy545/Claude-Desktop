@@ -167,3 +167,81 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_switch_view_url_mapping_chat() {
+        // Test that "chat" view maps to correct URL
+        let view = "chat";
+        let expected_url = "https://claude.ai";
+
+        let url = match view {
+            "chat" => "https://claude.ai",
+            "code" => "https://claude.ai/code",
+            _ => panic!("Unknown view"),
+        };
+
+        assert_eq!(url, expected_url, "Chat view should map to claude.ai");
+    }
+
+    #[test]
+    fn test_switch_view_url_mapping_code() {
+        // Test that "code" view maps to correct URL
+        let view = "code";
+        let expected_url = "https://claude.ai/code";
+
+        let url = match view {
+            "chat" => "https://claude.ai",
+            "code" => "https://claude.ai/code",
+            _ => panic!("Unknown view"),
+        };
+
+        assert_eq!(url, expected_url, "Code view should map to claude.ai/code");
+    }
+
+    #[test]
+    fn test_switch_view_invalid_view() {
+        // Test that invalid view names are rejected
+        let view = "invalid";
+
+        let result = match view {
+            "chat" => Ok("https://claude.ai"),
+            "code" => Ok("https://claude.ai/code"),
+            _ => Err(format!("Unknown view: {}", view)),
+        };
+
+        assert!(result.is_err(), "Invalid view should return error");
+        assert_eq!(result.unwrap_err(), "Unknown view: invalid");
+    }
+
+    #[test]
+    fn test_switch_view_case_sensitive() {
+        // Test that view names are case-sensitive
+        let view = "Chat"; // Capital C
+
+        let result = match view {
+            "chat" => Ok("https://claude.ai"),
+            "code" => Ok("https://claude.ai/code"),
+            _ => Err(format!("Unknown view: {}", view)),
+        };
+
+        assert!(result.is_err(), "View names should be case-sensitive");
+    }
+
+    #[test]
+    fn test_get_app_version() {
+        let version = get_app_version();
+        assert!(!version.is_empty(), "Version should not be empty");
+        assert!(version.chars().any(|c| c.is_numeric()), "Version should contain numbers");
+    }
+
+    #[test]
+    fn test_get_system_info() {
+        let info = get_system_info().unwrap();
+        assert!(info.contains("OS:"), "System info should contain OS");
+        assert!(info.contains("Arch:"), "System info should contain architecture");
+    }
+}

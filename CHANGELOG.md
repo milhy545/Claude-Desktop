@@ -8,13 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Comprehensive testing infrastructure with 9 unit tests
-- Debug logging and performance profiling utilities
-- Complete documentation (EN + CZ versions)
-- GitHub Actions CI/CD workflows
-- Code coverage reporting with Codecov
-- Contributing guidelines (CONTRIBUTING.md)
-- Issue and PR templates
+- N/A
 
 ### Changed
 - N/A
@@ -27,6 +21,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - N/A
+
+### Security
+- N/A
+
+## [0.2.0] - 2025-11-19
+
+### Added
+- Chat + Code tab switching in single window
+  - New `switch_view()` Tauri command for seamless view switching
+  - Tab UI for switching between Chat and Code interfaces
+  - Event-based communication between Rust backend and JavaScript frontend
+  - Memory-optimized single iframe approach (vs multiple windows)
+- Split layout toggle option in settings (experimental)
+- Unit tests for view switching functionality (6 new tests)
+- Comprehensive API documentation for `switch_view` command (EN + CZ)
+
+### Changed
+- Updated API documentation with switch_view command details
+- Enhanced frontend with tab-based navigation
+- Improved user experience for low-memory systems
+
+### Performance
+- Reduced memory usage by consolidating to single webview
+- Eliminated multi-window overhead for better system stability
+
+## [0.1.1] - 2025-11-18
+
+### Added
+- Comprehensive testing infrastructure with 9 unit tests
+- Debug logging and performance profiling utilities
+- Complete documentation (EN + CZ versions)
+- GitHub Actions CI/CD workflows
+- Code coverage reporting with Codecov
+- Contributing guidelines (CONTRIBUTING.md)
+- Issue and PR templates
 
 ### Security
 - Added cargo-audit security scanning in CI

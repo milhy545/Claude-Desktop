@@ -348,6 +348,73 @@ fn open_config_dir() -> Result<(), String> {
 
 ---
 
+### `switch_view(view)`
+
+Přepínání mezi zobrazeními Chat a Code v aplikaci.
+
+**Parametry:**
+- `view` (string): Zobrazení, na které se má přepnout. Platné hodnoty: `"chat"` nebo `"code"`
+
+**Vrací:** `Promise<void>`
+
+**Příklad:**
+```javascript
+// Přepnout na zobrazení Chat
+await invoke('switch_view', { view: 'chat' });
+
+// Přepnout na zobrazení Code
+await invoke('switch_view', { view: 'code' });
+
+// S ošetřením chyb
+try {
+    await invoke('switch_view', { view: 'chat' });
+    console.log('✅ Přepnuto na zobrazení Chat');
+} catch (error) {
+    console.error('Nepodařilo se přepnout zobrazení:', error);
+}
+```
+
+**Rust implementace:**
+```rust
+#[tauri::command]
+fn switch_view(app: tauri::AppHandle, view: String) -> Result<(), String> {
+    let url = match view.as_str() {
+        "chat" => "https://claude.ai",
+        "code" => "https://claude.ai/code",
+        _ => return Err(format!("Unknown view: {}", view)),
+    };
+
+    if let Some(window) = app.get_webview_window("main") {
+        window.emit("change-view", url)
+            .map_err(|e| format!("Failed to emit event: {}", e))?;
+        log::info!("🔄 Switched view to: {}", view);
+        Ok(())
+    } else {
+        Err("Main window not found".to_string())
+    }
+}
+```
+
+**Události:**
+- Vysílá událost `change-view` s URL do hlavního okna
+- Frontend naslouchá této události pro aktualizaci iframe src
+
+**Chyby:**
+- `"Unknown view: <view>"` - Byl poskytnut neplatný název zobrazení
+- `"Failed to emit event: ..."` - Selhalo vyslání události
+- `"Main window not found"` - Hlavní okno není dostupné
+
+**Platná zobrazení:**
+- `"chat"` - Chatovací rozhraní Claude AI (https://claude.ai)
+- `"code"` - Rozhraní Claude Code (https://claude.ai/code)
+
+**Poznámky:**
+- Názvy zobrazení rozlišují velikost písmen
+- Platné jsou pouze malá písmena "chat" a "code"
+- Funkce vysílá událost místo přímé změny URL, aby oddělila backend od manipulace s DOM na frontendu
+
+---
+
 ## Frontend API
 
 ### Inicializace aplikace

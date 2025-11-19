@@ -348,6 +348,73 @@ fn open_config_dir() -> Result<(), String> {
 
 ---
 
+### `switch_view(view)`
+
+Switch between Chat and Code views in the application.
+
+**Parameters:**
+- `view` (string): The view to switch to. Valid values: `"chat"` or `"code"`
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```javascript
+// Switch to Chat view
+await invoke('switch_view', { view: 'chat' });
+
+// Switch to Code view
+await invoke('switch_view', { view: 'code' });
+
+// With error handling
+try {
+    await invoke('switch_view', { view: 'chat' });
+    console.log('✅ Switched to Chat view');
+} catch (error) {
+    console.error('Failed to switch view:', error);
+}
+```
+
+**Rust Implementation:**
+```rust
+#[tauri::command]
+fn switch_view(app: tauri::AppHandle, view: String) -> Result<(), String> {
+    let url = match view.as_str() {
+        "chat" => "https://claude.ai",
+        "code" => "https://claude.ai/code",
+        _ => return Err(format!("Unknown view: {}", view)),
+    };
+
+    if let Some(window) = app.get_webview_window("main") {
+        window.emit("change-view", url)
+            .map_err(|e| format!("Failed to emit event: {}", e))?;
+        log::info!("🔄 Switched view to: {}", view);
+        Ok(())
+    } else {
+        Err("Main window not found".to_string())
+    }
+}
+```
+
+**Events:**
+- Emits `change-view` event with URL to the main window
+- Frontend listens for this event to update iframe src
+
+**Errors:**
+- `"Unknown view: <view>"` - Invalid view name provided
+- `"Failed to emit event: ..."` - Event emission failed
+- `"Main window not found"` - Main window not accessible
+
+**Valid Views:**
+- `"chat"` - Claude AI chat interface (https://claude.ai)
+- `"code"` - Claude Code interface (https://claude.ai/code)
+
+**Notes:**
+- View names are case-sensitive
+- Only lowercase "chat" and "code" are valid
+- The function emits an event rather than directly changing the URL to decouple backend from frontend DOM manipulation
+
+---
+
 ## Frontend API
 
 ### App Initialization
