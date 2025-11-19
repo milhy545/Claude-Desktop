@@ -14,12 +14,14 @@
 ## ✨ Features
 
 - ✅ **Native Linux performance** - No Electron bloat
+- ✅ **Chat + Code in one window** - Switch between Claude Chat and Claude Code with tabs
 - ✅ **MCP Server support** - Full Model Context Protocol integration
 - ✅ **Session authentication** - Uses your Claude subscription (no API keys)
 - ✅ **System tray** - Quick access from taskbar
 - ✅ **Global hotkey** - `Ctrl+Alt+Space` to open
 - ✅ **Dark theme** - Easy on the eyes
 - ✅ **Config UI** - Manage MCP servers through GUI
+- ✅ **Memory efficient** - Single window, no extra processes
 
 ## 📦 Installation
 
@@ -127,6 +129,28 @@ Session stored in: `~/.claude/`
 - `Ctrl+Alt+Space` - Show/focus window (global)
 - `Ctrl+,` - Open settings
 - `Esc` - Close modal/settings
+
+## 💬 Chat + Code Integration
+
+Claude Desktop includes **both Claude Chat and Claude Code** in one application:
+
+**Tabs Mode (default):**
+```
+[💬 Chat] [⌨️ Code]
+     ▲
+  Click to switch
+```
+
+- Click **Chat** → Opens claude.ai (conversations)
+- Click **Code** → Opens Claude Code (coding assistant)
+- Single window, low memory usage
+- Perfect for low-spec PCs
+
+**Why tabs?**
+- Memory efficient (only one webview active)
+- No system freeze from multiple windows
+- Fast switching between Chat and Code
+- Ideal for all-in-one PCs
 
 ## 🏗️ Architecture
 

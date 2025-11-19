@@ -2,12 +2,17 @@
 // Komunikace s Tauri backendem
 
 const { invoke } = window.__TAURI__.core;
+const { listen } = window.__TAURI__.event;
 
 // DOM Elements
 let settingsModal;
 let mcpConfig;
 let serverList;
 let authBtn;
+let chatTab;
+let codeTab;
+let claudeIframe;
+let currentView = 'chat';
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', async () => {
@@ -18,9 +23,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     mcpConfig = document.getElementById('mcpConfig');
     serverList = document.getElementById('mcpServerList');
     authBtn = document.getElementById('authBtn');
+    chatTab = document.getElementById('chatTab');
+    codeTab = document.getElementById('codeTab');
+    claudeIframe = document.querySelector('#claudeWebview iframe');
 
     // Setup event listeners
     setupEventListeners();
+
+    // Listen for view change events from Rust
+    await listenForViewChanges();
 
     // Check authentication
     await checkAuth();
@@ -34,6 +45,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Event Listeners
 function setupEventListeners() {
+    // Tab switching
+    chatTab.addEventListener('click', () => switchView('chat'));
+    codeTab.addEventListener('click', () => switchView('code'));
+
     // Settings button
     document.getElementById('settingsBtn').addEventListener('click', openSettings);
 
@@ -59,6 +74,47 @@ function setupEventListeners() {
     // Add server button
     document.getElementById('addServerBtn').addEventListener('click', () => {
         openSettings();
+    });
+}
+
+// View Switching
+async function switchView(view) {
+    if (currentView === view) return;
+
+    try {
+        // Call Rust backend to emit event
+        await invoke('switch_view', { view });
+
+        // Update UI
+        currentView = view;
+        updateTabStates();
+
+        console.log(`🔄 Switched to ${view}`);
+    } catch (error) {
+        console.error('Failed to switch view:', error);
+    }
+}
+
+function updateTabStates() {
+    if (currentView === 'chat') {
+        chatTab.classList.add('active');
+        codeTab.classList.remove('active');
+    } else {
+        chatTab.classList.remove('active');
+        codeTab.classList.add('active');
+    }
+}
+
+// Listen for view change events from Rust
+async function listenForViewChanges() {
+    await listen('change-view', (event) => {
+        const url = event.payload;
+        console.log(`📡 Received view change event: ${url}`);
+
+        // Change iframe URL
+        if (claudeIframe) {
+            claudeIframe.src = url;
+        }
     });
 }
 

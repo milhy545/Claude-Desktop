@@ -14,6 +14,17 @@
                 <h1>🦀 Claude Desktop</h1>
                 <span class="badge">Tauri Edition</span>
             </div>
+
+            <!-- View Tabs -->
+            <div class="view-tabs">
+                <button id="chatTab" class="tab-btn active" data-view="chat">
+                    💬 Chat
+                </button>
+                <button id="codeTab" class="tab-btn" data-view="code">
+                    ⌨️ Code
+                </button>
+            </div>
+
             <div class="header-actions">
                 <button id="settingsBtn" class="btn btn-icon" title="Nastavení">⚙️</button>
                 <button id="authBtn" class="btn btn-primary">Přihlásit se</button>
@@ -65,6 +76,15 @@
                             <button id="saveConfigBtn" class="btn btn-primary">Uložit</button>
                             <button id="openConfigDirBtn" class="btn btn-secondary">Otevřít složku</button>
                         </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Zobrazení</h3>
+                        <label>
+                            <input type="checkbox" id="splitLayoutToggle">
+                            Rozdělený layout (Chat + Code vedle sebe)
+                        </label>
+                        <p class="hint">⚠️ Vyžaduje víc paměti. Doporučeno pro výkonnější PC.</p>
                     </div>
 
                     <div class="settings-section">

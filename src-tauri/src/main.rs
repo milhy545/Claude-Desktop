@@ -88,6 +88,29 @@ fn open_config_dir() -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn switch_view(app: tauri::AppHandle, view: String) -> Result<(), String> {
+    use tauri::Manager;
+
+    let url = match view.as_str() {
+        "chat" => "https://claude.ai",
+        "code" => "https://claude.ai/code",
+        _ => return Err(format!("Unknown view: {}", view)),
+    };
+
+    // Get the main window
+    if let Some(window) = app.get_webview_window("main") {
+        // Emit event to change iframe URL
+        window.emit("change-view", url)
+            .map_err(|e| format!("Failed to emit event: {}", e))?;
+
+        log::info!("🔄 Switched view to: {}", view);
+        Ok(())
+    } else {
+        Err("Main window not found".to_string())
+    }
+}
+
 fn main() {
     // Inicializace loggingu
     debug::init_logging();
@@ -111,6 +134,7 @@ fn main() {
             get_app_version,
             get_system_info,
             open_config_dir,
+            switch_view,
         ])
         .setup(|app| {
             // Inicializace system tray
