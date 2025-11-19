@@ -75,6 +75,34 @@ function setupEventListeners() {
     document.getElementById('addServerBtn').addEventListener('click', () => {
         openSettings();
     });
+
+    // Voice controls
+    const micButton = document.getElementById('micButton');
+    if (micButton) {
+        micButton.addEventListener('click', () => {
+            if (window.voiceManager) {
+                window.voiceManager.startListening();
+            }
+        });
+    }
+
+    const saveVoiceSettingsBtn = document.getElementById('saveVoiceSettingsBtn');
+    if (saveVoiceSettingsBtn) {
+        saveVoiceSettingsBtn.addEventListener('click', saveVoiceSettings);
+    }
+
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', clearVoiceHistory);
+    }
+
+    const outputSpeed = document.getElementById('outputSpeed');
+    const speedValue = document.getElementById('speedValue');
+    if (outputSpeed && speedValue) {
+        outputSpeed.addEventListener('input', (e) => {
+            speedValue.textContent = e.target.value + 'x';
+        });
+    }
 }
 
 // View Switching
@@ -227,6 +255,77 @@ async function loadAppInfo() {
     }
 }
 
+// Voice Settings
+async function loadVoiceSettings() {
+    if (!window.voiceManager) return;
+
+    // Load voices into dropdown
+    const voiceSelect = document.getElementById('outputVoice');
+    if (voiceSelect) {
+        const voices = window.voiceManager.getVoices();
+
+        // Wait for voices to load (sometimes delayed)
+        if (voices.length === 0) {
+            window.speechSynthesis.addEventListener('voiceschanged', () => {
+                const updatedVoices = window.voiceManager.getVoices();
+                populateVoiceOptions(voiceSelect, updatedVoices);
+            }, { once: true });
+        } else {
+            populateVoiceOptions(voiceSelect, voices);
+        }
+    }
+
+    // Load settings from Rust backend
+    const settings = window.voiceManager.settings;
+    if (settings) {
+        document.getElementById('inputLanguage').value = settings.input_language;
+        document.getElementById('outputSpeed').value = settings.output_speed;
+        document.getElementById('speedValue').textContent = settings.output_speed + 'x';
+        document.getElementById('autoPlay').checked = settings.auto_play;
+        document.getElementById('historyLimit').value = settings.history_limit;
+    }
+}
+
+function populateVoiceOptions(selectElement, voices) {
+    // Clear existing options except default
+    selectElement.innerHTML = '<option value="default">Výchozí systémový hlas</option>';
+
+    // Add voice options
+    voices.forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        selectElement.appendChild(option);
+    });
+
+    // Select current voice if set
+    if (window.voiceManager.settings && window.voiceManager.settings.output_voice) {
+        selectElement.value = window.voiceManager.settings.output_voice;
+    }
+}
+
+async function saveVoiceSettings() {
+    if (!window.voiceManager) return;
+
+    const settings = {
+        input_language: document.getElementById('inputLanguage').value,
+        output_voice: document.getElementById('outputVoice').value,
+        output_speed: parseFloat(document.getElementById('outputSpeed').value),
+        auto_play: document.getElementById('autoPlay').checked,
+        history_limit: parseInt(document.getElementById('historyLimit').value)
+    };
+
+    await window.voiceManager.updateSettings(settings);
+}
+
+async function clearVoiceHistory() {
+    if (!window.voiceManager) return;
+
+    if (confirm('Opravdu chcete smazat celou historii konverzací?')) {
+        await window.voiceManager.clearConversations();
+    }
+}
+
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
     // Ctrl+, to open settings
@@ -235,12 +334,28 @@ document.addEventListener('keydown', (e) => {
         openSettings();
     }
 
+    // Ctrl+M to toggle microphone
+    if (e.ctrlKey && e.key === 'm') {
+        e.preventDefault();
+        if (window.voiceManager) {
+            window.voiceManager.startListening();
+        }
+    }
+
     // Escape to close modal
     if (e.key === 'Escape' && !settingsModal.classList.contains('hidden')) {
         closeSettings();
     }
 });
 
+// Load voice settings when opening settings modal
+const originalOpenSettings = openSettings;
+openSettings = async function() {
+    await originalOpenSettings();
+    await loadVoiceSettings();
+};
+
 console.log('🦀 Tauri frontend loaded');
 console.log('💾 Memory: ~30-50 MB (vs Electron ~200-400 MB)');
 console.log('⚡ Startup: <1s (vs Electron 3-5s)');
+console.log('🎤 Voice features enabled');

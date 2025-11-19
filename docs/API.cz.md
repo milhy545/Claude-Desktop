@@ -415,6 +415,204 @@ fn switch_view(app: tauri::AppHandle, view: String) -> Result<(), String> {
 
 ---
 
+## Voice API (Hlasové funkce)
+
+### `save_conversation(entry)`
+
+Uložit záznam konverzace do historie.
+
+**Parametry:**
+- `entry` (ConversationEntry): Záznam konverzace k uložení
+  - `id` (string): Jedinečný identifikátor (UUID)
+  - `timestamp` (number): Unix timestamp v milisekundách
+  - `user_input` (string): Text vstupu uživatele
+  - `assistant_response` (string): Text odpovědi asistenta
+  - `voice_used` (boolean): Zda byl použit hlasový vstup
+  - `played_back` (boolean): Zda byla odpověď přehrána
+
+**Vrací:** `Promise<void>`
+
+**Příklad:**
+```javascript
+const entry = {
+    id: crypto.randomUUID(),
+    timestamp: Date.now(),
+    user_input: "Jak funguje fotosyntéza?",
+    assistant_response: "Fotosyntéza je proces...",
+    voice_used: true,
+    played_back: false
+};
+
+await invoke('save_conversation', { entry });
+```
+
+**Rust implementace:**
+```rust
+#[tauri::command]
+fn save_conversation(entry: voice::ConversationEntry) -> Result<(), String> {
+    voice::save_conversation(entry)
+}
+```
+
+**Uložiště:**
+- Uloženo v: `~/.config/Claude/voice/conversations.json`
+- Automaticky udržuje limit historie (výchozí: 100 záznamů)
+- Ponechává nejnovější záznamy při překročení limitu
+
+---
+
+### `load_conversations()`
+
+Načíst historii konverzací z úložiště.
+
+**Parametry:** Žádné
+
+**Vrací:** `Promise<Array<ConversationEntry>>`
+
+**Příklad:**
+```javascript
+const conversations = await invoke('load_conversations');
+
+console.log(`Načteno ${conversations.length} konverzací`);
+
+conversations.forEach(conv => {
+    console.log(`${conv.user_input} -> ${conv.assistant_response}`);
+});
+```
+
+**Rust implementace:**
+```rust
+#[tauri::command]
+fn load_conversations() -> Result<Vec<voice::ConversationEntry>, String> {
+    voice::load_conversations()
+}
+```
+
+**Vrací prázdné pole pokud:**
+- Ještě nebyly uloženy žádné konverzace
+- Soubor s konverzacemi neexistuje
+
+---
+
+### `clear_conversations()`
+
+Smazat celou historii konverzací.
+
+**Parametry:** Žádné
+
+**Vrací:** `Promise<void>`
+
+**Příklad:**
+```javascript
+if (confirm('Smazat celou historii konverzací?')) {
+    await invoke('clear_conversations');
+    console.log('✅ Historie smazána');
+}
+```
+
+**Rust implementace:**
+```rust
+#[tauri::command]
+fn clear_conversations() -> Result<(), String> {
+    voice::clear_conversations()
+}
+```
+
+**Efekty:**
+- Smaže `~/.config/Claude/voice/conversations.json`
+- Nelze vrátit zpět
+- Neovlivňuje hlasová nastavení
+
+---
+
+### `get_voice_settings()`
+
+Načíst aktuální hlasová nastavení.
+
+**Parametry:** Žádné
+
+**Vrací:** `Promise<VoiceSettings>`
+
+**Struktura VoiceSettings:**
+- `input_language` (string): Jazyk pro rozpoznávání řeči (např. "cs-CZ")
+- `output_voice` (string): Název hlasu pro syntézu řeči
+- `output_speed` (number): Rychlost přehrávání (0.5 - 2.0)
+- `auto_play` (boolean): Automaticky přehrát odpovědi
+- `history_limit` (number): Maximální počet uložených konverzací
+
+**Příklad:**
+```javascript
+const settings = await invoke('get_voice_settings');
+
+console.log(`Jazyk vstupu: ${settings.input_language}`);
+console.log(`Rychlost výstupu: ${settings.output_speed}x`);
+console.log(`Auto-přehrávání: ${settings.auto_play}`);
+```
+
+**Rust implementace:**
+```rust
+#[tauri::command]
+fn get_voice_settings() -> Result<voice::VoiceSettings, String> {
+    voice::load_voice_settings()
+}
+```
+
+**Výchozí hodnoty:**
+```json
+{
+  "input_language": "cs-CZ",
+  "output_voice": "default",
+  "output_speed": 1.0,
+  "auto_play": false,
+  "history_limit": 100
+}
+```
+
+---
+
+### `save_voice_settings(settings)`
+
+Uložit hlasová nastavení do trvalého úložiště.
+
+**Parametry:**
+- `settings` (VoiceSettings): Objekt nastavení k uložení
+
+**Vrací:** `Promise<void>`
+
+**Příklad:**
+```javascript
+const newSettings = {
+    input_language: 'en-US',
+    output_voice: 'Google US English',
+    output_speed: 1.5,
+    auto_play: true,
+    history_limit: 200
+};
+
+await invoke('save_voice_settings', { settings: newSettings });
+console.log('✅ Nastavení uloženo');
+```
+
+**Rust implementace:**
+```rust
+#[tauri::command]
+fn save_voice_settings(settings: voice::VoiceSettings) -> Result<(), String> {
+    voice::save_voice_settings(&settings)
+}
+```
+
+**Uložiště:**
+- Uloženo v: `~/.config/Claude/voice/voice_settings.json`
+- Přetrvává napříč restarty aplikace
+- Aplikováno okamžitě po uložení
+
+**Validace:**
+- `output_speed` musí být mezi 0.5 a 2.0
+- `history_limit` musí být minimálně 10
+- `input_language` by měl být validní BCP 47 jazykový tag
+
+---
+
 ## Frontend API
 
 ### Inicializace aplikace

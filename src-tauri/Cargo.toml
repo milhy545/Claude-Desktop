@@ -1,7 +1,7 @@
 [package]
 name = "claude-desktop"
-version = "0.2.0"
-description = "Claude Desktop for Linux - Lightweight Tauri implementation"
+version = "0.3.0"
+description = "Claude Desktop for Linux - Lightweight Tauri implementation with voice features"
 authors = ["milhy545"]
 license = "MIT"
 repository = "https://github.com/milhy545/Claude-Desktop"

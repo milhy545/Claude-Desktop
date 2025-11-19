@@ -7,3 +7,4 @@
 pub mod auth;
 pub mod mcp;
 pub mod debug;
+pub mod voice;

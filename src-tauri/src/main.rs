@@ -10,6 +10,7 @@ use std::sync::Mutex;
 mod auth;
 mod mcp;
 mod debug;
+mod voice;
 
 // Globální stav aplikace
 struct AppState {
@@ -111,6 +112,32 @@ fn switch_view(app: tauri::AppHandle, view: String) -> Result<(), String> {
     }
 }
 
+// Voice commands
+#[tauri::command]
+fn save_conversation(entry: voice::ConversationEntry) -> Result<(), String> {
+    voice::save_conversation(entry)
+}
+
+#[tauri::command]
+fn load_conversations() -> Result<Vec<voice::ConversationEntry>, String> {
+    voice::load_conversations()
+}
+
+#[tauri::command]
+fn clear_conversations() -> Result<(), String> {
+    voice::clear_conversations()
+}
+
+#[tauri::command]
+fn get_voice_settings() -> Result<voice::VoiceSettings, String> {
+    voice::load_voice_settings()
+}
+
+#[tauri::command]
+fn save_voice_settings(settings: voice::VoiceSettings) -> Result<(), String> {
+    voice::save_voice_settings(&settings)
+}
+
 fn main() {
     // Inicializace loggingu
     debug::init_logging();
@@ -135,6 +162,11 @@ fn main() {
             get_system_info,
             open_config_dir,
             switch_view,
+            save_conversation,
+            load_conversations,
+            clear_conversations,
+            get_voice_settings,
+            save_voice_settings,
         ])
         .setup(|app| {
             // Inicializace system tray
@@ -243,5 +275,82 @@ mod tests {
         let info = get_system_info().unwrap();
         assert!(info.contains("OS:"), "System info should contain OS");
         assert!(info.contains("Arch:"), "System info should contain architecture");
+    }
+
+    #[test]
+    fn test_voice_settings_defaults() {
+        let settings = voice::VoiceSettings::default();
+        assert_eq!(settings.input_language, "cs-CZ");
+        assert_eq!(settings.output_speed, 1.0);
+        assert_eq!(settings.auto_play, false);
+        assert_eq!(settings.history_limit, 100);
+    }
+
+    #[test]
+    fn test_conversation_entry_fields() {
+        use std::time::{SystemTime, UNIX_EPOCH};
+
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as i64;
+
+        let entry = voice::ConversationEntry {
+            id: "test-voice-123".to_string(),
+            timestamp,
+            user_input: "Jak se máš?".to_string(),
+            assistant_response: "Mám se dobře, děkuji!".to_string(),
+            voice_used: true,
+            played_back: true,
+        };
+
+        assert_eq!(entry.id, "test-voice-123");
+        assert!(!entry.user_input.is_empty());
+        assert!(!entry.assistant_response.is_empty());
+        assert!(entry.voice_used);
+        assert!(entry.played_back);
+        assert!(entry.timestamp > 0);
+    }
+
+    #[test]
+    fn test_voice_settings_serialization() {
+        let settings = voice::VoiceSettings {
+            input_language: "en-US".to_string(),
+            output_voice: "Google US English".to_string(),
+            output_speed: 1.5,
+            auto_play: true,
+            history_limit: 50,
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        let deserialized: voice::VoiceSettings = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.input_language, "en-US");
+        assert_eq!(deserialized.output_voice, "Google US English");
+        assert_eq!(deserialized.output_speed, 1.5);
+        assert_eq!(deserialized.auto_play, true);
+        assert_eq!(deserialized.history_limit, 50);
+    }
+
+    #[test]
+    fn test_conversation_entry_serialization() {
+        let entry = voice::ConversationEntry {
+            id: "uuid-123".to_string(),
+            timestamp: 1637012345678,
+            user_input: "Test question".to_string(),
+            assistant_response: "Test answer".to_string(),
+            voice_used: false,
+            played_back: false,
+        };
+
+        let json = serde_json::to_string(&entry).unwrap();
+        let deserialized: voice::ConversationEntry = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.id, "uuid-123");
+        assert_eq!(deserialized.timestamp, 1637012345678);
+        assert_eq!(deserialized.user_input, "Test question");
+        assert_eq!(deserialized.assistant_response, "Test answer");
+        assert_eq!(deserialized.voice_used, false);
+        assert_eq!(deserialized.played_back, false);
     }
 }

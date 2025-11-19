@@ -1,7 +1,7 @@
 {
   "name": "claude-desktop-tauri",
-  "version": "0.2.0",
-  "description": "Claude Desktop for Linux - Lightweight Tauri implementation",
+  "version": "0.3.0",
+  "description": "Claude Desktop for Linux - Lightweight Tauri implementation with voice features",
   "author": "milhy545",
   "license": "MIT",
   "repository": {

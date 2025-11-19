@@ -331,3 +331,237 @@ textarea {
 ::-webkit-scrollbar-thumb:hover {
     background-color: #4a4a4a;
 }
+
+/* Voice Features */
+.voice-btn {
+    background-color: var(--bg-tertiary);
+    border: 2px solid var(--border);
+    color: var(--text-primary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.voice-btn:hover {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.05);
+}
+
+.voice-btn:active {
+    transform: scale(0.95);
+}
+
+/* Microphone Button States */
+.mic-btn.listening {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    animation: pulse 1.5s infinite;
+}
+
+.mic-btn.processing {
+    background-color: #f39c12;
+    border-color: #f39c12;
+    animation: spin 1s linear infinite;
+}
+
+.mic-btn.error {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+/* Form Controls */
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-top: 6px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+select.form-control {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23a0a0a0' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+input[type="number"].form-control {
+    max-width: 120px;
+}
+
+/* Speed Control */
+.speed-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+    margin-bottom: 12px;
+}
+
+.speed-control input[type="range"] {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.speed-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--accent);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+}
+
+.speed-control input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.speed-control input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: var(--accent);
+    cursor: pointer;
+    border-radius: 50%;
+    border: none;
+    transition: transform 0.2s ease;
+}
+
+.speed-control input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.2);
+}
+
+.speed-control span {
+    min-width: 50px;
+    text-align: right;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+/* Settings Labels */
+.settings-section label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-top: 12px;
+    cursor: pointer;
+}
+
+.settings-section label[for] {
+    cursor: pointer;
+}
+
+.settings-section input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+}
+
+/* Notifications */
+.notification {
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.notification-info {
+    background-color: #3498db;
+}
+
+.notification-success {
+    background-color: #27ae60;
+}
+
+.notification-warning {
+    background-color: #f39c12;
+}
+
+.notification-error {
+    background-color: #e74c3c;
+}
+
+/* Keyboard Shortcuts Help */
+.shortcuts-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    font-style: italic;
+}
+
+.shortcuts-hint code {
+    background-color: var(--bg-secondary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: var(--accent);
+}

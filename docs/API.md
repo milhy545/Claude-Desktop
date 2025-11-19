@@ -415,6 +415,204 @@ fn switch_view(app: tauri::AppHandle, view: String) -> Result<(), String> {
 
 ---
 
+## Voice API
+
+### `save_conversation(entry)`
+
+Save a conversation entry to history.
+
+**Parameters:**
+- `entry` (ConversationEntry): The conversation entry to save
+  - `id` (string): Unique identifier (UUID)
+  - `timestamp` (number): Unix timestamp in milliseconds
+  - `user_input` (string): User's input text
+  - `assistant_response` (string): Assistant's response text
+  - `voice_used` (boolean): Whether voice input was used
+  - `played_back` (boolean): Whether response was played back
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```javascript
+const entry = {
+    id: crypto.randomUUID(),
+    timestamp: Date.now(),
+    user_input: "Jak funguje fotosyntéza?",
+    assistant_response: "Fotosyntéza je proces...",
+    voice_used: true,
+    played_back: false
+};
+
+await invoke('save_conversation', { entry });
+```
+
+**Rust Implementation:**
+```rust
+#[tauri::command]
+fn save_conversation(entry: voice::ConversationEntry) -> Result<(), String> {
+    voice::save_conversation(entry)
+}
+```
+
+**Storage:**
+- Saved to: `~/.config/Claude/voice/conversations.json`
+- Automatically maintains history limit (default: 100 entries)
+- Keeps most recent entries when limit is exceeded
+
+---
+
+### `load_conversations()`
+
+Load conversation history from storage.
+
+**Parameters:** None
+
+**Returns:** `Promise<Array<ConversationEntry>>`
+
+**Example:**
+```javascript
+const conversations = await invoke('load_conversations');
+
+console.log(`Loaded ${conversations.length} conversations`);
+
+conversations.forEach(conv => {
+    console.log(`${conv.user_input} -> ${conv.assistant_response}`);
+});
+```
+
+**Rust Implementation:**
+```rust
+#[tauri::command]
+fn load_conversations() -> Result<Vec<voice::ConversationEntry>, String> {
+    voice::load_conversations()
+}
+```
+
+**Returns empty array if:**
+- No conversations have been saved yet
+- Conversations file doesn't exist
+
+---
+
+### `clear_conversations()`
+
+Clear all conversation history.
+
+**Parameters:** None
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```javascript
+if (confirm('Clear all conversation history?')) {
+    await invoke('clear_conversations');
+    console.log('✅ History cleared');
+}
+```
+
+**Rust Implementation:**
+```rust
+#[tauri::command]
+fn clear_conversations() -> Result<(), String> {
+    voice::clear_conversations()
+}
+```
+
+**Effects:**
+- Deletes `~/.config/Claude/voice/conversations.json`
+- Cannot be undone
+- Does not affect voice settings
+
+---
+
+### `get_voice_settings()`
+
+Get current voice settings.
+
+**Parameters:** None
+
+**Returns:** `Promise<VoiceSettings>`
+
+**VoiceSettings Structure:**
+- `input_language` (string): Language for speech recognition (e.g., "cs-CZ")
+- `output_voice` (string): Voice name for text-to-speech
+- `output_speed` (number): Playback speed (0.5 - 2.0)
+- `auto_play` (boolean): Automatically play responses
+- `history_limit` (number): Maximum conversation entries to keep
+
+**Example:**
+```javascript
+const settings = await invoke('get_voice_settings');
+
+console.log(`Input language: ${settings.input_language}`);
+console.log(`Output speed: ${settings.output_speed}x`);
+console.log(`Auto-play: ${settings.auto_play}`);
+```
+
+**Rust Implementation:**
+```rust
+#[tauri::command]
+fn get_voice_settings() -> Result<voice::VoiceSettings, String> {
+    voice::load_voice_settings()
+}
+```
+
+**Default Values:**
+```json
+{
+  "input_language": "cs-CZ",
+  "output_voice": "default",
+  "output_speed": 1.0,
+  "auto_play": false,
+  "history_limit": 100
+}
+```
+
+---
+
+### `save_voice_settings(settings)`
+
+Save voice settings to persistent storage.
+
+**Parameters:**
+- `settings` (VoiceSettings): Settings object to save
+
+**Returns:** `Promise<void>`
+
+**Example:**
+```javascript
+const newSettings = {
+    input_language: 'en-US',
+    output_voice: 'Google US English',
+    output_speed: 1.5,
+    auto_play: true,
+    history_limit: 200
+};
+
+await invoke('save_voice_settings', { settings: newSettings });
+console.log('✅ Settings saved');
+```
+
+**Rust Implementation:**
+```rust
+#[tauri::command]
+fn save_voice_settings(settings: voice::VoiceSettings) -> Result<(), String> {
+    voice::save_voice_settings(&settings)
+}
+```
+
+**Storage:**
+- Saved to: `~/.config/Claude/voice/voice_settings.json`
+- Persists across application restarts
+- Applied immediately after saving
+
+**Validation:**
+- `output_speed` must be between 0.5 and 2.0
+- `history_limit` must be at least 10
+- `input_language` should be valid BCP 47 language tag
+
+---
+
 ## Frontend API
 
 ### App Initialization
