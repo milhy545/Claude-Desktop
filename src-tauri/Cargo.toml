@@ -22,7 +22,7 @@ tauri-plugin-global-shortcut = "2.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
-dirs = "5.0"
+dirs = "6.0"
 
 # Config parsing
 toml = "0.8"
