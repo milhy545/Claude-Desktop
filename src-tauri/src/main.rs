@@ -3,13 +3,13 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::Manager;
 use std::sync::Mutex;
+use tauri::Manager;
 
 // Moduly
 mod auth;
-mod mcp;
 mod debug;
+mod mcp;
 mod voice;
 
 // Globální stav aplikace
@@ -102,7 +102,8 @@ fn switch_view(app: tauri::AppHandle, view: String) -> Result<(), String> {
     // Get the main window
     if let Some(window) = app.get_webview_window("main") {
         // Emit event to change iframe URL
-        window.emit("change-view", url)
+        window
+            .emit("change-view", url)
             .map_err(|e| format!("Failed to emit event: {}", e))?;
 
         log::info!("🔄 Switched view to: {}", view);
@@ -267,14 +268,20 @@ mod tests {
     fn test_get_app_version() {
         let version = get_app_version();
         assert!(!version.is_empty(), "Version should not be empty");
-        assert!(version.chars().any(|c| c.is_numeric()), "Version should contain numbers");
+        assert!(
+            version.chars().any(|c| c.is_numeric()),
+            "Version should contain numbers"
+        );
     }
 
     #[test]
     fn test_get_system_info() {
         let info = get_system_info().unwrap();
         assert!(info.contains("OS:"), "System info should contain OS");
-        assert!(info.contains("Arch:"), "System info should contain architecture");
+        assert!(
+            info.contains("Arch:"),
+            "System info should contain architecture"
+        );
     }
 
     #[test]

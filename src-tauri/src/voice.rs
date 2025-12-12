@@ -38,8 +38,7 @@ impl Default for VoiceSettings {
 
 /// Get path to voice data directory
 fn get_voice_dir() -> Result<PathBuf, String> {
-    let config_dir = dirs::config_dir()
-        .ok_or("Cannot find config directory")?;
+    let config_dir = dirs::config_dir().ok_or("Cannot find config directory")?;
 
     let voice_dir = config_dir.join("Claude").join("voice");
 
@@ -67,8 +66,8 @@ pub fn load_conversations() -> Result<Vec<ConversationEntry>, String> {
         return Ok(Vec::new());
     }
 
-    let content = fs::read_to_string(&path)
-        .map_err(|e| format!("Failed to read conversations: {}", e))?;
+    let content =
+        fs::read_to_string(&path).map_err(|e| format!("Failed to read conversations: {}", e))?;
 
     let conversations: Vec<ConversationEntry> = serde_json::from_str(&content)
         .map_err(|e| format!("Failed to parse conversations: {}", e))?;
@@ -101,8 +100,7 @@ pub fn save_conversation(entry: ConversationEntry) -> Result<(), String> {
     let json = serde_json::to_string_pretty(&conversations)
         .map_err(|e| format!("Failed to serialize conversations: {}", e))?;
 
-    fs::write(&path, json)
-        .map_err(|e| format!("Failed to write conversations: {}", e))?;
+    fs::write(&path, json).map_err(|e| format!("Failed to write conversations: {}", e))?;
 
     log::info!("💾 Saved conversation entry: {}", conversations.len());
     Ok(())
@@ -113,8 +111,7 @@ pub fn clear_conversations() -> Result<(), String> {
     let path = get_conversations_path()?;
 
     if path.exists() {
-        fs::remove_file(&path)
-            .map_err(|e| format!("Failed to delete conversations: {}", e))?;
+        fs::remove_file(&path).map_err(|e| format!("Failed to delete conversations: {}", e))?;
     }
 
     log::info!("🗑️  Cleared conversation history");
@@ -130,8 +127,8 @@ pub fn load_voice_settings() -> Result<VoiceSettings, String> {
         return Ok(VoiceSettings::default());
     }
 
-    let content = fs::read_to_string(&path)
-        .map_err(|e| format!("Failed to read voice settings: {}", e))?;
+    let content =
+        fs::read_to_string(&path).map_err(|e| format!("Failed to read voice settings: {}", e))?;
 
     let settings: VoiceSettings = serde_json::from_str(&content)
         .map_err(|e| format!("Failed to parse voice settings: {}", e))?;
@@ -146,8 +143,7 @@ pub fn save_voice_settings(settings: &VoiceSettings) -> Result<(), String> {
     let json = serde_json::to_string_pretty(settings)
         .map_err(|e| format!("Failed to serialize voice settings: {}", e))?;
 
-    fs::write(&path, json)
-        .map_err(|e| format!("Failed to write voice settings: {}", e))?;
+    fs::write(&path, json).map_err(|e| format!("Failed to write voice settings: {}", e))?;
 
     log::info!("💾 Saved voice settings");
     Ok(())

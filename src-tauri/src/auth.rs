@@ -1,9 +1,9 @@
 // Authentication module
 // Integrace s claude CLI authentication
 
-use std::process::Command;
-use std::path::PathBuf;
 use dirs::home_dir;
+use std::path::PathBuf;
+use std::process::Command;
 
 /// Cesta k Claude CLI session
 fn get_session_path() -> PathBuf {
@@ -22,7 +22,8 @@ pub fn is_authenticated() -> Result<bool, String> {
     }
 
     // Zkontroluj, jestli jsou nějaké session soubory
-    let has_session = session_dir.read_dir()
+    let has_session = session_dir
+        .read_dir()
         .map(|mut dir| dir.any(|_| true))
         .unwrap_or(false);
 

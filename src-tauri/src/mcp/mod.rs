@@ -1,11 +1,11 @@
 // MCP (Model Context Protocol) module
 // Správa MCP serverů
 
+use dirs::config_dir;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::{Child, Command};
-use dirs::config_dir;
 
 pub mod config;
 pub mod launcher;
@@ -42,8 +42,7 @@ pub fn load_config() -> Result<String, String> {
         return Ok(default_config.to_string());
     }
 
-    std::fs::read_to_string(&config_path)
-        .map_err(|e| format!("Nepodařilo se načíst config: {}", e))
+    std::fs::read_to_string(&config_path).map_err(|e| format!("Nepodařilo se načíst config: {}", e))
 }
 
 /// Uloží MCP konfiguraci
@@ -58,8 +57,7 @@ pub fn save_config(config: &str) -> Result<(), String> {
             .map_err(|e| format!("Nepodařilo se vytvořit config directory: {}", e))?;
     }
 
-    std::fs::write(&config_path, config)
-        .map_err(|e| format!("Nepodařilo se uložit config: {}", e))
+    std::fs::write(&config_path, config).map_err(|e| format!("Nepodařilo se uložit config: {}", e))
 }
 
 /// Vrátí cestu k config souboru
@@ -86,20 +84,22 @@ pub fn stop_server(name: &str, state: &tauri::State<crate::AppState>) -> Result<
 
 /// Parsuje config a vrátí seznam serverů
 pub fn parse_config(config_json: &str) -> Result<Vec<McpServer>, String> {
-    let config: serde_json::Value = serde_json::from_str(config_json)
-        .map_err(|e| format!("Invalid JSON: {}", e))?;
+    let config: serde_json::Value =
+        serde_json::from_str(config_json).map_err(|e| format!("Invalid JSON: {}", e))?;
 
     let mut servers = Vec::new();
 
     if let Some(mcp_servers) = config.get("mcpServers").and_then(|v| v.as_object()) {
         for (name, server_config) in mcp_servers {
             if let Some(obj) = server_config.as_object() {
-                let command = obj.get("command")
+                let command = obj
+                    .get("command")
                     .and_then(|v| v.as_str())
                     .unwrap_or("")
                     .to_string();
 
-                let args = obj.get("args")
+                let args = obj
+                    .get("args")
                     .and_then(|v| v.as_array())
                     .map(|arr| {
                         arr.iter()
