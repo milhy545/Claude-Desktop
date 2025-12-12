@@ -1,9 +1,15 @@
 // Voice module - Conversation history and voice settings management
 // Handles storage of conversations and user preferences for voice features
 
+use crate::error::AppError;
+use crate::system::SystemOps;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
+
+#[cfg(test)]
+#[path = "voice_tests.rs"]
+mod tests;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConversationEntry {
@@ -37,53 +43,53 @@ impl Default for VoiceSettings {
 }
 
 /// Get path to voice data directory
-fn get_voice_dir() -> Result<PathBuf, String> {
-    let config_dir = dirs::config_dir().ok_or("Cannot find config directory")?;
+async fn get_voice_dir(sys: &dyn SystemOps) -> Result<PathBuf, AppError> {
+    let config_dir = sys.config_dir().ok_or(AppError::Config("Cannot find config directory".to_string()))?;
 
     let voice_dir = config_dir.join("Claude").join("voice");
 
-    std::fs::create_dir_all(&voice_dir)
-        .map_err(|e| format!("Failed to create voice directory: {}", e))?;
+    if !sys.exists(&voice_dir).await {
+        sys.create_dir_all(&voice_dir).await?;
+    }
 
     Ok(voice_dir)
 }
 
 /// Get path to conversations file
-fn get_conversations_path() -> Result<PathBuf, String> {
-    Ok(get_voice_dir()?.join("conversations.json"))
+async fn get_conversations_path(sys: &dyn SystemOps) -> Result<PathBuf, AppError> {
+    Ok(get_voice_dir(sys).await?.join("conversations.json"))
 }
 
 /// Get path to voice settings file
-fn get_settings_path() -> Result<PathBuf, String> {
-    Ok(get_voice_dir()?.join("voice_settings.json"))
+async fn get_settings_path(sys: &dyn SystemOps) -> Result<PathBuf, AppError> {
+    Ok(get_voice_dir(sys).await?.join("voice_settings.json"))
 }
 
 /// Load all conversations from file
-pub fn load_conversations() -> Result<Vec<ConversationEntry>, String> {
-    let path = get_conversations_path()?;
+pub async fn load_conversations(sys: &Arc<dyn SystemOps>) -> Result<Vec<ConversationEntry>, AppError> {
+    let path = get_conversations_path(sys.as_ref()).await?;
 
-    if !path.exists() {
+    if !sys.exists(&path).await {
         return Ok(Vec::new());
     }
 
-    let content =
-        fs::read_to_string(&path).map_err(|e| format!("Failed to read conversations: {}", e))?;
+    let content = sys.read_to_string(&path).await?;
 
     let conversations: Vec<ConversationEntry> = serde_json::from_str(&content)
-        .map_err(|e| format!("Failed to parse conversations: {}", e))?;
+        .map_err(|e| AppError::Json(e))?;
 
     Ok(conversations)
 }
 
 /// Save conversation entry
-pub fn save_conversation(entry: ConversationEntry) -> Result<(), String> {
-    let mut conversations = load_conversations()?;
+pub async fn save_conversation(sys: &Arc<dyn SystemOps>, entry: ConversationEntry) -> Result<(), AppError> {
+    let mut conversations = load_conversations(sys).await?;
 
     // Add new entry
     conversations.push(entry);
 
     // Load settings to get history limit
-    let settings = load_voice_settings()?;
+    let settings = load_voice_settings(sys).await?;
 
     // Keep only the most recent entries
     if conversations.len() > settings.history_limit {
@@ -96,22 +102,22 @@ pub fn save_conversation(entry: ConversationEntry) -> Result<(), String> {
     }
 
     // Save to file
-    let path = get_conversations_path()?;
+    let path = get_conversations_path(sys.as_ref()).await?;
     let json = serde_json::to_string_pretty(&conversations)
-        .map_err(|e| format!("Failed to serialize conversations: {}", e))?;
+        .map_err(|e| AppError::Json(e))?;
 
-    fs::write(&path, json).map_err(|e| format!("Failed to write conversations: {}", e))?;
+    sys.write(&path, &json).await?;
 
     log::info!("💾 Saved conversation entry: {}", conversations.len());
     Ok(())
 }
 
 /// Clear all conversations
-pub fn clear_conversations() -> Result<(), String> {
-    let path = get_conversations_path()?;
+pub async fn clear_conversations(sys: &Arc<dyn SystemOps>) -> Result<(), AppError> {
+    let path = get_conversations_path(sys.as_ref()).await?;
 
-    if path.exists() {
-        fs::remove_file(&path).map_err(|e| format!("Failed to delete conversations: {}", e))?;
+    if sys.exists(&path).await {
+        sys.remove_file(&path).await?;
     }
 
     log::info!("🗑️  Cleared conversation history");
@@ -119,95 +125,31 @@ pub fn clear_conversations() -> Result<(), String> {
 }
 
 /// Load voice settings
-pub fn load_voice_settings() -> Result<VoiceSettings, String> {
-    let path = get_settings_path()?;
+pub async fn load_voice_settings(sys: &Arc<dyn SystemOps>) -> Result<VoiceSettings, AppError> {
+    let path = get_settings_path(sys.as_ref()).await?;
 
-    if !path.exists() {
+    if !sys.exists(&path).await {
         // Return defaults if file doesn't exist
         return Ok(VoiceSettings::default());
     }
 
-    let content =
-        fs::read_to_string(&path).map_err(|e| format!("Failed to read voice settings: {}", e))?;
+    let content = sys.read_to_string(&path).await?;
 
     let settings: VoiceSettings = serde_json::from_str(&content)
-        .map_err(|e| format!("Failed to parse voice settings: {}", e))?;
+        .map_err(|e| AppError::Json(e))?;
 
     Ok(settings)
 }
 
 /// Save voice settings
-pub fn save_voice_settings(settings: &VoiceSettings) -> Result<(), String> {
-    let path = get_settings_path()?;
+pub async fn save_voice_settings(sys: &Arc<dyn SystemOps>, settings: &VoiceSettings) -> Result<(), AppError> {
+    let path = get_settings_path(sys.as_ref()).await?;
 
     let json = serde_json::to_string_pretty(settings)
-        .map_err(|e| format!("Failed to serialize voice settings: {}", e))?;
+        .map_err(|e| AppError::Json(e))?;
 
-    fs::write(&path, json).map_err(|e| format!("Failed to write voice settings: {}", e))?;
+    sys.write(&path, &json).await?;
 
     log::info!("💾 Saved voice settings");
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    #[test]
-    fn test_default_voice_settings() {
-        let settings = VoiceSettings::default();
-        assert_eq!(settings.input_language, "cs-CZ");
-        assert_eq!(settings.output_speed, 1.0);
-        assert_eq!(settings.auto_play, false);
-        assert_eq!(settings.history_limit, 100);
-    }
-
-    #[test]
-    fn test_conversation_entry_creation() {
-        let timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as i64;
-
-        let entry = ConversationEntry {
-            id: "test-123".to_string(),
-            timestamp,
-            user_input: "Test input".to_string(),
-            assistant_response: "Test response".to_string(),
-            voice_used: true,
-            played_back: false,
-        };
-
-        assert_eq!(entry.id, "test-123");
-        assert!(entry.voice_used);
-        assert!(!entry.played_back);
-    }
-
-    #[test]
-    fn test_voice_settings_serialization() {
-        let settings = VoiceSettings {
-            input_language: "en-US".to_string(),
-            output_voice: "Google US English".to_string(),
-            output_speed: 1.5,
-            auto_play: true,
-            history_limit: 50,
-        };
-
-        let json = serde_json::to_string(&settings).unwrap();
-        let deserialized: VoiceSettings = serde_json::from_str(&json).unwrap();
-
-        assert_eq!(deserialized.input_language, "en-US");
-        assert_eq!(deserialized.output_speed, 1.5);
-        assert_eq!(deserialized.history_limit, 50);
-    }
-
-    #[test]
-    fn test_get_voice_dir() {
-        let result = get_voice_dir();
-        assert!(result.is_ok());
-
-        let path = result.unwrap();
-        assert!(path.to_string_lossy().contains("Claude/voice"));
-    }
 }

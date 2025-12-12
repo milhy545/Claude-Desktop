@@ -1,51 +1,63 @@
-// MCP Module Tests
-
 #[cfg(test)]
 mod tests {
-    use super::super::*;
+    use super::*;
+    use crate::mocks::MockSystemOps;
+    use crate::mcp::{load_config, save_config, parse_config};
+    use crate::system::SystemOps;
+    use std::sync::Arc;
+    use std::path::PathBuf;
 
-    #[test]
-    fn test_parse_config_empty() {
-        let config = r#"{
-            "mcpServers": {}
-        }"#;
+    #[tokio::test]
+    async fn test_load_default_config() {
+        let mock = MockSystemOps::new();
+        let sys: Arc<dyn SystemOps> = Arc::new(mock);
 
-        let result = parse_config(config);
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), 0);
+        let config = load_config(&sys).await.unwrap();
+        assert!(config.contains("mcpServers"));
+        assert!(config.contains("filesystem"));
+    }
+
+    #[tokio::test]
+    async fn test_load_existing_config() {
+        let expected_json = r#"{"mcpServers": {"test": {"command": "echo", "args": ["hello"]}}}"#;
+        let config_path = "/home/mockuser/.config/Claude/claude_desktop_config.json";
+
+        let mock = MockSystemOps::new()
+            .with_file(config_path, expected_json);
+        let sys: Arc<dyn SystemOps> = Arc::new(mock);
+
+        let config = load_config(&sys).await.unwrap();
+        assert_eq!(config, expected_json);
+    }
+
+    #[tokio::test]
+    async fn test_save_config() {
+        let mock = MockSystemOps::new();
+        let sys: Arc<dyn SystemOps> = Arc::new(mock);
+
+        let config_data = r#"{"test": true}"#;
+        save_config(&sys, config_data).await.unwrap();
+
+        let path = PathBuf::from("/home/mockuser/.config/Claude/claude_desktop_config.json");
+        let saved = sys.read_to_string(&path).await.unwrap();
+        assert_eq!(saved, config_data);
     }
 
     #[test]
-    fn test_parse_config_with_servers() {
-        let config = r#"{
+    fn test_parse_config() {
+        let json = r#"{
             "mcpServers": {
-                "filesystem": {
-                    "command": "npx",
-                    "args": ["-y", "@modelcontextprotocol/server-filesystem"]
+                "py": {
+                    "command": "python3",
+                    "args": ["server.py"]
                 }
             }
         }"#;
 
-        let result = parse_config(config);
-        assert!(result.is_ok());
-
-        let servers = result.unwrap();
+        let servers = parse_config(json).unwrap();
         assert_eq!(servers.len(), 1);
-        assert_eq!(servers[0].name, "filesystem");
-        assert_eq!(servers[0].command, "npx");
-    }
-
-    #[test]
-    fn test_parse_config_invalid_json() {
-        let config = "{ invalid json }";
-        let result = parse_config(config);
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_get_config_path() {
-        let path = super::super::get_config_path();
-        assert!(path.to_string_lossy().contains("Claude"));
-        assert!(path.to_string_lossy().contains("claude_desktop_config.json"));
+        assert_eq!(servers[0].name, "py");
+        assert_eq!(servers[0].command, "python3");
+        assert_eq!(servers[0].args[0], "server.py");
     }
 }

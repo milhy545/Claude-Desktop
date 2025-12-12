@@ -8,3 +8,9 @@ pub mod auth;
 pub mod debug;
 pub mod mcp;
 pub mod voice;
+pub mod error;
+pub mod system;
+pub mod state;
+
+#[cfg(test)]
+pub mod mocks;

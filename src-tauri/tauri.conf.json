@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "",
-    "devUrl": "../src",
+    "devUrl": "http://localhost:1420",
     "frontendDist": "../src"
   },
   "app": {
@@ -23,7 +23,7 @@
         "fullscreen": false,
         "decorations": true,
         "center": true,
-        "fileDropEnabled": true,
+        "dragDropEnabled": true,
         "url": "index.html"
       }
     ],
