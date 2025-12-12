@@ -2,8 +2,11 @@
 mod tests {
     use super::*;
     use crate::mocks::MockSystemOps;
-    use crate::voice::{ConversationEntry, VoiceSettings, save_conversation, load_conversations, save_voice_settings};
     use crate::system::SystemOps;
+    use crate::voice::{
+        load_conversations, save_conversation, save_voice_settings, ConversationEntry,
+        VoiceSettings,
+    };
     use std::sync::Arc;
 
     #[tokio::test]
@@ -41,14 +44,19 @@ mod tests {
 
         // Add 3 entries
         for i in 1..=3 {
-            save_conversation(&sys, ConversationEntry {
-                id: i.to_string(),
-                timestamp: i,
-                user_input: format!("Q{}", i),
-                assistant_response: format!("A{}", i),
-                voice_used: false,
-                played_back: false,
-            }).await.unwrap();
+            save_conversation(
+                &sys,
+                ConversationEntry {
+                    id: i.to_string(),
+                    timestamp: i,
+                    user_input: format!("Q{}", i),
+                    assistant_response: format!("A{}", i),
+                    voice_used: false,
+                    played_back: false,
+                },
+            )
+            .await
+            .unwrap();
         }
 
         let loaded = load_conversations(&sys).await.unwrap();

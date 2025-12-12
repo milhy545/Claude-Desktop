@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::mcp::{load_config, parse_config, save_config};
     use crate::mocks::MockSystemOps;
-    use crate::mcp::{load_config, save_config, parse_config};
     use crate::system::SystemOps;
-    use std::sync::Arc;
     use std::path::PathBuf;
+    use std::sync::Arc;
 
     #[tokio::test]
     async fn test_load_default_config() {
@@ -22,8 +22,7 @@ mod tests {
         let expected_json = r#"{"mcpServers": {"test": {"command": "echo", "args": ["hello"]}}}"#;
         let config_path = "/home/mockuser/.config/Claude/claude_desktop_config.json";
 
-        let mock = MockSystemOps::new()
-            .with_file(config_path, expected_json);
+        let mock = MockSystemOps::new().with_file(config_path, expected_json);
         let sys: Arc<dyn SystemOps> = Arc::new(mock);
 
         let config = load_config(&sys).await.unwrap();

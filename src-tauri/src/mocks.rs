@@ -1,17 +1,17 @@
 #[cfg(test)]
-use crate::system::SystemOps;
-#[cfg(test)]
 use crate::error::AppError;
 #[cfg(test)]
-use std::path::{Path, PathBuf};
-#[cfg(test)]
-use std::process::{Output, ExitStatus};
-#[cfg(test)]
-use std::sync::Mutex;
+use crate::system::SystemOps;
 #[cfg(test)]
 use std::collections::HashMap;
 #[cfg(test)]
 use std::os::unix::process::ExitStatusExt;
+#[cfg(test)]
+use std::path::{Path, PathBuf};
+#[cfg(test)]
+use std::process::{ExitStatus, Output};
+#[cfg(test)]
+use std::sync::Mutex;
 
 #[cfg(test)]
 pub struct MockSystemOps {
@@ -31,12 +31,24 @@ impl MockSystemOps {
     }
 
     pub fn with_file(self, path: &str, content: &str) -> Self {
-        self.files.lock().unwrap().insert(PathBuf::from(path), content.to_string());
+        self.files
+            .lock()
+            .unwrap()
+            .insert(PathBuf::from(path), content.to_string());
         self
     }
 
-    pub fn with_command_output(self, command: &str, success: bool, stdout: &str, stderr: &str) -> Self {
-        self.command_outputs.lock().unwrap().insert(command.to_string(), (success, stdout.to_string(), stderr.to_string()));
+    pub fn with_command_output(
+        self,
+        command: &str,
+        success: bool,
+        stdout: &str,
+        stderr: &str,
+    ) -> Self {
+        self.command_outputs.lock().unwrap().insert(
+            command.to_string(),
+            (success, stdout.to_string(), stderr.to_string()),
+        );
         self
     }
 }
@@ -46,9 +58,12 @@ impl MockSystemOps {
 impl SystemOps for MockSystemOps {
     async fn read_to_string(&self, path: &Path) -> Result<String, AppError> {
         let files = self.files.lock().unwrap();
-        files.get(path)
-            .cloned()
-            .ok_or_else(|| AppError::Io(std::io::Error::new(std::io::ErrorKind::NotFound, "File not found")))
+        files.get(path).cloned().ok_or_else(|| {
+            AppError::Io(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "File not found",
+            ))
+        })
     }
 
     async fn write(&self, path: &Path, content: &str) -> Result<(), AppError> {
@@ -89,7 +104,10 @@ impl SystemOps for MockSystemOps {
 
     async fn run_command(&self, command: &str, args: &[&str]) -> Result<Output, AppError> {
         // Zaznamenat volání
-        self.commands.lock().unwrap().push((command.to_string(), args.iter().map(|s| s.to_string()).collect()));
+        self.commands.lock().unwrap().push((
+            command.to_string(),
+            args.iter().map(|s| s.to_string()).collect(),
+        ));
 
         let outputs = self.command_outputs.lock().unwrap();
         if let Some((success, stdout, stderr)) = outputs.get(command) {
@@ -102,8 +120,8 @@ impl SystemOps for MockSystemOps {
             })
         } else {
             // Default mock response
-             let status = ExitStatus::from_raw(0);
-             Ok(Output {
+            let status = ExitStatus::from_raw(0);
+            Ok(Output {
                 status,
                 stdout: Vec::new(),
                 stderr: Vec::new(),

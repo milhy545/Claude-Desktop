@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mocks::MockSystemOps;
     use crate::auth::{is_authenticated, login};
     use crate::error::AppError;
+    use crate::mocks::MockSystemOps;
     use crate::system::SystemOps;
     use std::sync::Arc;
 
@@ -18,8 +18,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_is_authenticated_true() {
-        let mock = MockSystemOps::new()
-            .with_file("/home/mockuser/.claude", "dir placeholder");
+        let mock = MockSystemOps::new().with_file("/home/mockuser/.claude", "dir placeholder");
 
         let sys: Arc<dyn SystemOps> = Arc::new(mock);
 
@@ -29,8 +28,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_login_success() {
-        let mock = MockSystemOps::new()
-            .with_command_output("claude", true, "", "");
+        let mock = MockSystemOps::new().with_command_output("claude", true, "", "");
         let sys: Arc<dyn SystemOps> = Arc::new(mock);
 
         let result = login(&sys).await;
@@ -40,8 +38,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_login_failure() {
-        let mock = MockSystemOps::new()
-            .with_command_output("claude", false, "", "Auth error");
+        let mock = MockSystemOps::new().with_command_output("claude", false, "", "Auth error");
         let sys: Arc<dyn SystemOps> = Arc::new(mock);
 
         let result = login(&sys).await;

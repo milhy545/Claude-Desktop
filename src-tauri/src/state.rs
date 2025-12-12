@@ -1,7 +1,7 @@
-use std::sync::Arc;
-use tokio::sync::RwLock;
 use crate::mcp::McpServer;
 use crate::system::SystemOps;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 // Globální stav aplikace
 pub struct AppState {

@@ -44,7 +44,9 @@ impl Default for VoiceSettings {
 
 /// Get path to voice data directory
 async fn get_voice_dir(sys: &dyn SystemOps) -> Result<PathBuf, AppError> {
-    let config_dir = sys.config_dir().ok_or(AppError::Config("Cannot find config directory".to_string()))?;
+    let config_dir = sys
+        .config_dir()
+        .ok_or(AppError::Config("Cannot find config directory".to_string()))?;
 
     let voice_dir = config_dir.join("Claude").join("voice");
 
@@ -66,7 +68,9 @@ async fn get_settings_path(sys: &dyn SystemOps) -> Result<PathBuf, AppError> {
 }
 
 /// Load all conversations from file
-pub async fn load_conversations(sys: &Arc<dyn SystemOps>) -> Result<Vec<ConversationEntry>, AppError> {
+pub async fn load_conversations(
+    sys: &Arc<dyn SystemOps>,
+) -> Result<Vec<ConversationEntry>, AppError> {
     let path = get_conversations_path(sys.as_ref()).await?;
 
     if !sys.exists(&path).await {
@@ -75,14 +79,17 @@ pub async fn load_conversations(sys: &Arc<dyn SystemOps>) -> Result<Vec<Conversa
 
     let content = sys.read_to_string(&path).await?;
 
-    let conversations: Vec<ConversationEntry> = serde_json::from_str(&content)
-        .map_err(|e| AppError::Json(e))?;
+    let conversations: Vec<ConversationEntry> =
+        serde_json::from_str(&content).map_err(AppError::Json)?;
 
     Ok(conversations)
 }
 
 /// Save conversation entry
-pub async fn save_conversation(sys: &Arc<dyn SystemOps>, entry: ConversationEntry) -> Result<(), AppError> {
+pub async fn save_conversation(
+    sys: &Arc<dyn SystemOps>,
+    entry: ConversationEntry,
+) -> Result<(), AppError> {
     let mut conversations = load_conversations(sys).await?;
 
     // Add new entry
@@ -103,8 +110,7 @@ pub async fn save_conversation(sys: &Arc<dyn SystemOps>, entry: ConversationEntr
 
     // Save to file
     let path = get_conversations_path(sys.as_ref()).await?;
-    let json = serde_json::to_string_pretty(&conversations)
-        .map_err(|e| AppError::Json(e))?;
+    let json = serde_json::to_string_pretty(&conversations).map_err(AppError::Json)?;
 
     sys.write(&path, &json).await?;
 
@@ -135,18 +141,19 @@ pub async fn load_voice_settings(sys: &Arc<dyn SystemOps>) -> Result<VoiceSettin
 
     let content = sys.read_to_string(&path).await?;
 
-    let settings: VoiceSettings = serde_json::from_str(&content)
-        .map_err(|e| AppError::Json(e))?;
+    let settings: VoiceSettings = serde_json::from_str(&content).map_err(AppError::Json)?;
 
     Ok(settings)
 }
 
 /// Save voice settings
-pub async fn save_voice_settings(sys: &Arc<dyn SystemOps>, settings: &VoiceSettings) -> Result<(), AppError> {
+pub async fn save_voice_settings(
+    sys: &Arc<dyn SystemOps>,
+    settings: &VoiceSettings,
+) -> Result<(), AppError> {
     let path = get_settings_path(sys.as_ref()).await?;
 
-    let json = serde_json::to_string_pretty(settings)
-        .map_err(|e| AppError::Json(e))?;
+    let json = serde_json::to_string_pretty(settings).map_err(AppError::Json)?;
 
     sys.write(&path, &json).await?;
 

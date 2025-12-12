@@ -2,12 +2,12 @@
 // Správa MCP serverů
 
 use crate::error::AppError;
+use crate::state::AppState;
 use crate::system::SystemOps;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use crate::state::AppState;
 
 pub mod config;
 pub mod launcher;
@@ -85,8 +85,7 @@ pub async fn stop_server(name: &str, _state: &tauri::State<'_, AppState>) -> Res
 
 /// Parsuje config a vrátí seznam serverů
 pub fn parse_config(config_json: &str) -> Result<Vec<McpServer>, AppError> {
-    let config: serde_json::Value =
-        serde_json::from_str(config_json).map_err(AppError::Json)?;
+    let config: serde_json::Value = serde_json::from_str(config_json).map_err(AppError::Json)?;
 
     let mut servers = Vec::new();
 

@@ -6,11 +6,11 @@
 // Re-export modules for Tauri
 pub mod auth;
 pub mod debug;
-pub mod mcp;
-pub mod voice;
 pub mod error;
-pub mod system;
+pub mod mcp;
 pub mod state;
+pub mod system;
+pub mod voice;
 
 #[cfg(test)]
 pub mod mocks;
