@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - deb
+          - appimage
+          - rpm
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            libssl-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build ${{ matrix.target }}
+        run: npm run build:${{ matrix.target }}
+
+      - name: Get version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/appimage/*.AppImage
+            src-tauri/target/release/bundle/rpm/*.rpm
+          body: |
+            ## Claude Desktop ${{ steps.get_version.outputs.VERSION }}
+
+            ### 🦀 Tauri Edition - Linux Desktop Client
+
+            **Download:**
+            - `.deb` - Ubuntu, Debian, Mint
+            - `.AppImage` - Universal Linux
+            - `.rpm` - Fedora, RHEL, openSUSE
+
+            ### Features
+            - ✅ Lightweight (~5-8 MB)
+            - ✅ Fast startup (<1s)
+            - ✅ Low memory (~30-50 MB)
+            - ✅ MCP server support
+            - ✅ Session authentication
+
+            ### Installation
+
+            **Debian/Ubuntu:**
+            ```bash
+            sudo dpkg -i claude-desktop_*.deb
+            ```
+
+            **AppImage:**
+            ```bash
+            chmod +x claude-desktop_*.AppImage
+            ./claude-desktop_*.AppImage
+            ```
+
+            **Fedora/RHEL:**
+            ```bash
+            sudo rpm -i claude-desktop-*.rpm
+            ```
+
+            ### Changelog
+            See [CHANGELOG.md](CHANGELOG.md) for details.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

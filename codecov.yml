@@ -1,0 +1,29 @@
+# Codecov configuration
+
+coverage:
+  status:
+    project:
+      default:
+        target: 70%           # Target coverage
+        threshold: 5%          # Allow 5% drop
+        if_ci_failed: error
+
+    patch:
+      default:
+        target: 70%
+        threshold: 5%
+
+  precision: 2
+  round: down
+  range: "50...90"
+
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: false
+
+ignore:
+  - "src-tauri/target"
+  - "src-tauri/tests"
+  - "**/*_test.rs"
+  - "**/tests.rs"

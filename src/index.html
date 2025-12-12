@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Desktop</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <h1>🦀 Claude Desktop</h1>
+                <span class="badge">Tauri Edition</span>
+            </div>
+
+            <!-- View Tabs -->
+            <div class="view-tabs">
+                <button id="chatTab" class="tab-btn active" data-view="chat">
+                    💬 Chat
+                </button>
+                <button id="codeTab" class="tab-btn" data-view="code">
+                    ⌨️ Code
+                </button>
+            </div>
+
+            <div class="header-actions">
+                <button id="micButton" class="voice-btn mic-btn" title="Klikněte pro diktování">🎤</button>
+                <button id="settingsBtn" class="btn btn-icon" title="Nastavení">⚙️</button>
+                <button id="authBtn" class="btn btn-primary">Přihlásit se</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Sidebar - MCP Servers -->
+            <aside class="sidebar">
+                <h2>MCP Servery</h2>
+                <div id="mcpServerList" class="server-list">
+                    <p class="loading">Načítám...</p>
+                </div>
+                <button id="addServerBtn" class="btn btn-secondary">+ Přidat Server</button>
+            </aside>
+
+            <!-- Claude WebView Container -->
+            <div class="webview-container">
+                <div id="claudeWebview">
+                    <!-- Embedded claude.ai -->
+                    <iframe
+                        src="https://claude.ai"
+                        title="Claude AI"
+                        frameborder="0"
+                        allow="clipboard-read; clipboard-write"
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                    ></iframe>
+                </div>
+            </div>
+        </main>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Nastavení</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-section">
+                        <h3>MCP Konfigurace</h3>
+                        <textarea
+                            id="mcpConfig"
+                            rows="20"
+                            placeholder="Načítám konfiguraci..."
+                        ></textarea>
+                        <div class="button-group">
+                            <button id="saveConfigBtn" class="btn btn-primary">Uložit</button>
+                            <button id="openConfigDirBtn" class="btn btn-secondary">Otevřít složku</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Zobrazení</h3>
+                        <label>
+                            <input type="checkbox" id="splitLayoutToggle">
+                            Rozdělený layout (Chat + Code vedle sebe)
+                        </label>
+                        <p class="hint">⚠️ Vyžaduje víc paměti. Doporučeno pro výkonnější PC.</p>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Hlasové funkce</h3>
+
+                        <label for="inputLanguage">Jazyk pro rozpoznávání hlasu:</label>
+                        <select id="inputLanguage" class="form-control">
+                            <option value="cs-CZ">Čeština (cs-CZ)</option>
+                            <option value="en-US">Angličtina (en-US)</option>
+                            <option value="sk-SK">Slovenština (sk-SK)</option>
+                            <option value="de-DE">Němčina (de-DE)</option>
+                        </select>
+
+                        <label for="outputVoice">Hlas pro přehrávání:</label>
+                        <select id="outputVoice" class="form-control">
+                            <option value="default">Výchozí systémový hlas</option>
+                        </select>
+
+                        <label for="outputSpeed">Rychlost přehrávání:</label>
+                        <div class="speed-control">
+                            <input type="range" id="outputSpeed" min="0.5" max="2.0" step="0.1" value="1.0">
+                            <span id="speedValue">1.0x</span>
+                        </div>
+
+                        <label>
+                            <input type="checkbox" id="autoPlay">
+                            Automaticky přehrát odpovědi
+                        </label>
+
+                        <label for="historyLimit">Limit historie konverzací:</label>
+                        <input type="number" id="historyLimit" min="10" max="1000" value="100" class="form-control">
+
+                        <div class="button-group">
+                            <button id="saveVoiceSettingsBtn" class="btn btn-primary">Uložit hlasová nastavení</button>
+                            <button id="clearHistoryBtn" class="btn btn-secondary">Smazat historii</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Informace</h3>
+                        <p><strong>Verze:</strong> <span id="appVersion">0.1.0</span></p>
+                        <p><strong>Systém:</strong> <span id="systemInfo">Linux</span></p>
+                        <p><strong>RAM:</strong> ~30-50 MB 🚀</p>
+                        <p><strong>vs Electron:</strong> ~200-400 MB 🐌</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/voice.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
