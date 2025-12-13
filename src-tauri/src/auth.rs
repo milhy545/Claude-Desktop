@@ -1,90 +1,55 @@
 // Authentication module
 // Integrace s claude CLI authentication
 
-use dirs::home_dir;
+use crate::error::AppError;
+use crate::system::SystemOps;
 use std::path::PathBuf;
-use std::process::Command;
+use std::sync::Arc;
+
+#[cfg(test)]
+#[path = "auth_tests.rs"]
+mod tests;
 
 /// Cesta k Claude CLI session
-fn get_session_path() -> PathBuf {
-    home_dir()
+fn get_session_path(sys: &dyn SystemOps) -> PathBuf {
+    sys.home_dir()
         .expect("Nelze najít home directory")
         .join(".claude")
 }
 
 /// Zkontroluje, jestli je uživatel přihlášený
-pub fn is_authenticated() -> Result<bool, String> {
-    let session_dir = get_session_path();
+pub async fn is_authenticated(sys: &Arc<dyn SystemOps>) -> Result<bool, AppError> {
+    let session_dir = get_session_path(sys.as_ref());
 
     // Zkontroluj, jestli existuje session directory
-    if !session_dir.exists() {
+    if !sys.exists(&session_dir).await {
         return Ok(false);
     }
 
-    // Zkontroluj, jestli jsou nějaké session soubory
-    let has_session = session_dir
-        .read_dir()
-        .map(|mut dir| dir.any(|_| true))
-        .unwrap_or(false);
-
-    Ok(has_session)
+    Ok(true)
 }
 
 /// Spustí Claude CLI login proces
-pub async fn login() -> Result<String, String> {
+pub async fn login(sys: &Arc<dyn SystemOps>) -> Result<String, AppError> {
     // Spustí `claude auth login` proces
-    let output = Command::new("claude")
-        .arg("auth")
-        .arg("login")
-        .output()
-        .map_err(|e| format!("Nepodařilo se spustit claude CLI: {}", e))?;
+    let output = sys.run_command("claude", &["auth", "login"]).await?;
 
     if output.status.success() {
         Ok("Přihlášení úspěšné!".to_string())
     } else {
         let error = String::from_utf8_lossy(&output.stderr);
-        Err(format!("Přihlášení selhalo: {}", error))
+        Err(AppError::Auth(format!("Přihlášení selhalo: {}", error)))
     }
-}
-
-/// Načte session token (pokud existuje)
-pub fn get_session_token() -> Option<String> {
-    // TODO: Implementovat načítání tokenu z ~/.claude/
-    // Zatím placeholder
-    None
 }
 
 /// Vymaže session (logout)
-pub fn logout() -> Result<(), String> {
-    let session_dir = get_session_path();
+#[allow(dead_code)]
+pub async fn logout(sys: &Arc<dyn SystemOps>) -> Result<(), AppError> {
+    let session_dir = get_session_path(sys.as_ref());
 
-    if session_dir.exists() {
-        std::fs::remove_dir_all(&session_dir)
-            .map_err(|e| format!("Nepodařilo se smazat session: {}", e))?;
+    if sys.exists(&session_dir).await {
+        sys.remove_dir_all(&session_dir).await?;
     }
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_get_session_path() {
-        let path = get_session_path();
-        assert!(path.to_string_lossy().contains(".claude"));
-    }
-
-    #[test]
-    fn test_is_authenticated_returns_result() {
-        let result = is_authenticated();
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_logout_no_panic() {
-        // Should not panic even if session doesn't exist
-        let _ = logout();
-    }
 }

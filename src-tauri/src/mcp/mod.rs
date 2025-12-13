@@ -1,14 +1,20 @@
 // MCP (Model Context Protocol) module
 // Správa MCP serverů
 
-use dirs::config_dir;
+use crate::error::AppError;
+use crate::state::AppState;
+use crate::system::SystemOps;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::process::{Child, Command};
+use std::sync::Arc;
 
 pub mod config;
 pub mod launcher;
+
+#[cfg(test)]
+#[path = "tests.rs"]
+mod tests;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpServer {
@@ -19,13 +25,20 @@ pub struct McpServer {
     pub process: Option<u32>, // PID running procesu
 }
 
+/// Vrátí cestu k config souboru
+pub(crate) async fn get_config_path(sys: &dyn SystemOps) -> Result<PathBuf, AppError> {
+    sys.config_dir()
+        .ok_or(AppError::Config("Nelze najít config directory".to_string()))
+        .map(|d| d.join("Claude").join("claude_desktop_config.json"))
+}
+
 /// Načte MCP konfiguraci z ~/.config/Claude/claude_desktop_config.json
-pub fn load_config() -> Result<String, String> {
+pub async fn load_config(sys: &Arc<dyn SystemOps>) -> Result<String, AppError> {
     let _timer = crate::debug::PerfTimer::with_threshold("load_mcp_config", 100);
 
-    let config_path = get_config_path();
+    let config_path = get_config_path(sys.as_ref()).await?;
 
-    if !config_path.exists() {
+    if !sys.exists(&config_path).await {
         // Vytvoř výchozí konfiguraci
         let default_config = r#"{
   "mcpServers": {
@@ -42,50 +55,37 @@ pub fn load_config() -> Result<String, String> {
         return Ok(default_config.to_string());
     }
 
-    std::fs::read_to_string(&config_path).map_err(|e| format!("Nepodařilo se načíst config: {}", e))
+    sys.read_to_string(&config_path).await
 }
 
 /// Uloží MCP konfiguraci
-pub fn save_config(config: &str) -> Result<(), String> {
+pub async fn save_config(sys: &Arc<dyn SystemOps>, config: &str) -> Result<(), AppError> {
     let _timer = crate::debug::PerfTimer::with_threshold("save_mcp_config", 100);
 
-    let config_path = get_config_path();
+    let config_path = get_config_path(sys.as_ref()).await?;
 
-    // Vytvoř parent directory, pokud neexistuje
-    if let Some(parent) = config_path.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| format!("Nepodařilo se vytvořit config directory: {}", e))?;
-    }
-
-    std::fs::write(&config_path, config).map_err(|e| format!("Nepodařilo se uložit config: {}", e))
-}
-
-/// Vrátí cestu k config souboru
-pub(crate) fn get_config_path() -> PathBuf {
-    config_dir()
-        .expect("Nelze najít config directory")
-        .join("Claude")
-        .join("claude_desktop_config.json")
+    sys.write(&config_path, config).await
 }
 
 /// Spustí MCP server
-pub fn start_server(name: &str, state: &tauri::State<crate::AppState>) -> Result<(), String> {
+pub async fn start_server(name: &str, _state: &tauri::State<'_, AppState>) -> Result<(), AppError> {
     // TODO: Načíst konfiguraci a spustit server
+    // Pro spouštění procesu budeme muset rozšířit SystemOps o spawn metodu, která vrací Child handle
+    // Zatím jen log
     println!("🚀 Starting MCP server: {}", name);
     Ok(())
 }
 
 /// Zastaví MCP server
-pub fn stop_server(name: &str, state: &tauri::State<crate::AppState>) -> Result<(), String> {
+pub async fn stop_server(name: &str, _state: &tauri::State<'_, AppState>) -> Result<(), AppError> {
     // TODO: Zastavit running server
     println!("🛑 Stopping MCP server: {}", name);
     Ok(())
 }
 
 /// Parsuje config a vrátí seznam serverů
-pub fn parse_config(config_json: &str) -> Result<Vec<McpServer>, String> {
-    let config: serde_json::Value =
-        serde_json::from_str(config_json).map_err(|e| format!("Invalid JSON: {}", e))?;
+pub fn parse_config(config_json: &str) -> Result<Vec<McpServer>, AppError> {
+    let config: serde_json::Value = serde_json::from_str(config_json).map_err(AppError::Json)?;
 
     let mut servers = Vec::new();
 
